@@ -1,0 +1,75 @@
+services:
+  wordpress:
+    container_name: ${WORDPRESS_CONTAINER_NAME}
+    image: wordpress
+    restart: on-failure
+    ports:
+      - ${WORDPRESS_PORT}:80
+    environment:
+      WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX}
+      WORDPRESS_DEBUG: 1
+    volumes:
+      - ./wordpress:/var/www/html
+      - ./themes:/var/www/html/wp-content/themes
+      - ./plugins:/var/www/html/wp-content/plugins
+      - ./error-logging.ini:/usr/local/etc/php/conf.d/error-logging.ini
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    container_name: ${DB_CONTAINER_NAME}
+    image: mysql
+    restart: on-failure
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 0s
+
+  wpcli:
+    container_name: ${WPCLI_CONTAINER_NAME}
+    image: wordpress:cli-php7.4
+    volumes:
+      - ./wordpress:/var/www/html
+    user: xfs
+    entrypoint: wp
+    command: shell
+    environment:
+      WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}:3306
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX}
+    depends_on:
+      - wordpress
+      - db
+
+  phpmyadmin:
+    container_name: ${PHPMYADMIN_CONTAINER_NAME}
+    image: phpmyadmin
+    restart: always
+    ports:
+      - ${PHPMYADMIN_PORT}:80
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+
+volumes:
+  db:
