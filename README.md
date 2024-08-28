@@ -13,20 +13,19 @@ This simple handbook is my guide to working with WordPress and Docker easily. Th
 - [Table of Contents](#table-of-contents)
   - [Docker Compose Configuration](#docker-compose-configuration)
   - [Development Docker Commands](#development-docker-commands)
-      - [Check status of all containers.](#check-status-of-all-containers)
-      - [Start the containers.](#start-the-containers)
-      - [Stop the containers.](#stop-the-containers)
-      - [Restart the containers.](#restart-the-containers)
-      - [Stop and destroy containers.](#stop-and-destroy-containers)
-      - [Stop, destroy, and remove volumes for containers](#stop-destroy-and-remove-volumes-for-containers)
-      - [List volumes](#list-volumes)
-      - [Remove a volume](#remove-a-volume)
-      - [Remove all containers and volumes](#remove-all-containers-and-volumes)
-      - [Export a SQL dump](#export-a-sql-dump)
+    - [General](#general)
+      - [Volumes](#volumes)
+      - [Remove All Containers and Volumes](#remove-all-containers-and-volumes)
+    - [Starting Containers](#starting-containers)
+    - [Stopping Containers](#stopping-containers)
+    - [Restart Containers](#restart-containers)
+    - [Destroy Containers](#destroy-containers)
+    - [MySQL](#mysql)
       - [Import a SQL dump](#import-a-sql-dump)
-      - [View PHP Error Logs](#view-php-error-logs)
-      - [Find PHP \*.ini Files](#find-php-ini-files)
-      - [error-logging.ini](#error-loggingini)
+      - [Export a SQL dump](#export-a-sql-dump)
+    - [View PHP Error Logs](#view-php-error-logs)
+    - [Find PHP \*.ini Files](#find-php-ini-files)
+    - [error-logging.ini](#error-loggingini)
     - [Running WP-CLI](#running-wp-cli)
       - [Examples](#examples)
   - [Handling Permissions](#handling-permissions)
@@ -54,59 +53,33 @@ The file also defines a volume named db to persist database data across containe
 
 ## Development Docker Commands
 
-#### Check status of all containers.
+### General
+
+View the running containers or composed containers. Displays both running and inactive containers.
 
 ```bash
 docker ps -a
 ```
 
-#### Start the containers.
-
-Start in detached mode to free up the terminal.
-
 ```bash
-docker compose up -d
+docker compose ls -a
 ```
 
-#### Stop the containers.
+#### Volumes
 
-```bash
-docker compose stop
-```
-
-#### Restart the containers.
-
-```bash
-docker compose restart
-```
-
-#### Stop and destroy containers.
-
-```bash
-docker compose down
-```
-
-#### Stop, destroy, and remove volumes for containers
-
-This will not remove volumes that are bound to the host machine.
-
-```bash
-docker compose down -v
-```
-
-#### List volumes
+List all volumes
 
 ```bash
 docker volume ls
 ```
 
-#### Remove a volume
+Remove a volume
 
 ```bash
 docker volume rm [VOLUME_NAME]
 ```
 
-#### Remove all containers and volumes
+#### Remove All Containers and Volumes
 
 Stops all the containers, removes all the containers, then removes all volumes.
 
@@ -114,6 +87,72 @@ Stops all the containers, removes all the containers, then removes all volumes.
 docker stop $(docker ps -q)
 docker rm $(docker ps -a -q)
 docker volume rm $(docker volume ls -q)
+```
+
+### Starting Containers
+
+Start in detached mode to free up the terminal.
+
+```bash
+docker compose up -d
+```
+
+For specific compose files:
+
+```bash
+docker compose -f [COMPOSE_FILE] up -d
+```
+
+### Stopping Containers
+
+Stops the containers but does not remove them.
+
+```bash
+docker compose stop
+```
+
+For specific compose files:
+
+```bash
+docker compose -f [COMPOSE_FILE] stop
+```
+
+### Restart Containers
+
+Restarts the containers. Does not re-create the containers.
+
+```bash
+docker compose restart
+```
+
+For specific compose files:
+
+```bash
+docker compose -f [COMPOSE_FILE] restart
+```
+
+### Destroy Containers
+
+Destory only containers leaving volumes.
+
+```bash
+docker compose down
+```
+
+Destroy containers and volumes. Will not delete mounted volumes.
+
+```bash
+docker compose down -v
+```
+
+### MySQL
+
+#### Import a SQL dump
+
+Imports a SQL backup file from the current directory into a MySQL database running in a Docker container.
+
+```bash
+docker exec -i [CONTAINER_ID] mysql -u [USERNAME] -p[PASSWORD] [DATABASE_NAME] < backup.sql
 ```
 
 #### Export a SQL dump
@@ -124,15 +163,7 @@ Exports the contents of a MySQL database running in a Docker container to a SQL 
 docker exec [CONTAINER_ID] mysqldump -u [USERNAME] -p[PASSWORD] [DATABASE_NAME] > backup.sql
 ```
 
-#### Import a SQL dump
-
-Imports a SQL backup file from the current directory into a MySQL database running in a Docker container.
-
-```bash
-docker exec -i [CONTAINER_ID] mysql -u [USERNAME] -p[PASSWORD] [DATABASE_NAME] < backup.sql
-```
-
-#### View PHP Error Logs
+### View PHP Error Logs
 
 Watches the PHP error log file for the specified container. This is useful if for some reason the container cannot write the logs to the bind mount.
 
@@ -140,7 +171,7 @@ Watches the PHP error log file for the specified container. This is useful if fo
 docker logs -f --details [CONTAINER_NAME]
 ```
 
-#### Find PHP \*.ini Files
+### Find PHP \*.ini Files
 
 This will help identify where the `php.ini` files are located in the container.
 
@@ -148,7 +179,7 @@ This will help identify where the `php.ini` files are located in the container.
 docker exec -it [CONTAINER_NAME] php --ini
 ```
 
-#### error-logging.ini
+### error-logging.ini
 
 This file will set custom error logging settings to ensure that the PHP errors are output into the bind mount `wordpress/wp-content/debug.log`. It uses the default settings other than the error_log key being set to `/var/www/html/wp-content/debug.log`. This was done because there are issues with using `error_log` within the theme and the `debug.log` file was not being generated.
 
