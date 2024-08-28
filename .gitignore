@@ -1,0 +1,9 @@
+# Ignore everything
+*
+
+# Allow these
+!.gitignore
+!README.md
+!.env
+!error-logging.ini
+!compose.yaml
