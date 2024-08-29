@@ -7,3 +7,4 @@
 !.env
 !error-logging.ini
 !compose.yaml
+!install.sh
