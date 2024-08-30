@@ -1,0 +1,45 @@
+services:
+  wp-test-runner:
+    container_name: wp-test-runner
+    image: php:8.2-fpm-alpine
+    volumes:
+      - ./your-plugin:/your-plugin
+      - ./test-results:/var/log/test-results
+    working_dir: /your-plugin
+    entrypoint: /bin/sh
+    command: -c "apk update && apk add --no-cache bash subversion && docker-php-ext-install mysqli && ./bin/install-wp-tests.sh wordpress_database root password wp-test-db 6.6.1 true && ./vendor/bin/phpunit --testdox --verbose > /var/log/test-results/phpunit-results.log 2>&1"
+    depends_on:
+      - wp-test-db
+
+  wp-test-db:
+    container_name: wp-test-db
+    image: mysql:${MYSQL_VERSION}
+    restart: on-failure
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_TCP_PORT: 3306
+    volumes:
+      - wp-test-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 0s
+    ports:
+      - "9082:3306"
+
+  wp-test-phpmyadmin:
+    container_name: wp-test-phpmyadmin
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 9081:80
+    environment:
+      PMA_HOST: wp-test-db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+
+volumes:
+  wp-test-db:
