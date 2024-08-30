@@ -8,3 +8,4 @@
 !error-logging.ini
 !compose.yaml
 !test-compose.yaml
+!install.sh

@@ -274,3 +274,4 @@ find . -type f -exec chmod 664 {} \;
 - Ensure plugins can write to wp-content/uploads. ex. woocommerce logs
 - Create a separate database container to handle tests in Docker instead of local
 - Format commands in README better
+- Add docs for install script
