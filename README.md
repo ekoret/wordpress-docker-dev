@@ -12,6 +12,7 @@ This simple handbook is my guide to working with WordPress and Docker easily. Th
   - [General Usage](#general-usage)
 - [Table of Contents](#table-of-contents)
   - [Docker Compose Configuration](#docker-compose-configuration)
+  - [install.sh](#installsh)
   - [Development Docker Commands](#development-docker-commands)
     - [General](#general)
       - [Volumes](#volumes)
@@ -28,6 +29,9 @@ This simple handbook is my guide to working with WordPress and Docker easily. Th
     - [error-logging.ini](#error-loggingini)
     - [Running WP-CLI](#running-wp-cli)
       - [Examples](#examples)
+  - [Testing](#testing)
+    - [How Testing Works](#how-testing-works)
+    - [Run a Test](#run-a-test)
   - [Handling Permissions](#handling-permissions)
   - [To Do](#to-do)
 
@@ -50,6 +54,14 @@ The file also defines a volume named db to persist database data across containe
 - `wordpress` will be available at `localhost:8080`
 - `phpmyadmin` will be available at `localhost:8081`
 - `MySQL` port exposed on `8082`
+
+## install.sh
+
+This script can be used to install WordPress after the containers are made. It is mainly used if you've removed your database volumes and are developing on a completely new WordPress installation.
+
+```bash
+./install.sh
+```
 
 ## Development Docker Commands
 
@@ -213,6 +225,30 @@ docker compose run --rm wpcli option update siteurl "http://localhost:8080"
 docker compose run --rm wpcli core version
 ```
 
+## Testing
+
+### How Testing Works
+
+You can run unit tests as well as integrated tests for your plugin using the `testing-compose.yaml` file. The tests run directly in a Docker container and the test results are output to `test-results`.
+
+The tests are written in the root of the plugin. When the testing containers are started, the plugin files are mounted into the container and a local version of WordPress is installed in the container at /tmp/wordpress.
+
+### Run a Test
+
+To run tests, start the containers using the `test-compose.yaml` file:
+
+```bash
+docker compose -f test-compose.yaml up -d
+```
+
+The testing containers will set up the environment and automatically run the tests. After the tests are complete, the results will be output to `test-results`
+
+After running the tests, you should remove the containers to isolate future tests.
+
+```bash
+docker compose -f test-compose.yaml down -v
+```
+
 ## Handling Permissions
 
 If you are receiving file permission errors when attempting to save a file in VS Code, follow these steps:
@@ -270,8 +306,13 @@ find . -type f -exec chmod 664 {} \;
 
 - Create CRON job to create SQL dumps
 - Create script to create a SQL dump when the container stops/shuts down
-- Run install command when wpcli container starts to skip installation process
+- ~~Run install command when wpcli container starts to skip installation process~~
 - Ensure plugins can write to wp-content/uploads. ex. woocommerce logs
-- Create a separate database container to handle tests in Docker instead of local
+- ~~Create a separate database container to handle tests in Docker instead of local~~
 - Format commands in README better
-- Add docs for install script
+- ~~Add docs for install script~~
+- Create script to run tests
+  - Start containers
+  - Install dependencies
+  - Run tests and output results
+  - Stop and remove containers
